@@ -15,6 +15,9 @@ func main() {
 
 		command, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		if err == nil {
+			if command[:4] == "exit" {
+				os.Exit(0)
+			}
 			fmt.Printf("%s: command not found\n", command[:len(command)-1])
 		}
 	}
