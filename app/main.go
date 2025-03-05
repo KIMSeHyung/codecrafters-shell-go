@@ -12,8 +12,27 @@ import (
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Fprint
 
+func quoteStrip(str string) string {
+	var sb strings.Builder
+	isCompleteQuote := false
+	prevQuote := false
+	for _, x := range str {
+		if x == '\'' {
+			isCompleteQuote = prevQuote && !isCompleteQuote
+			prevQuote = !prevQuote
+		}
+		sb.WriteRune(x)
+		if isCompleteQuote {
+			return strings.ReplaceAll(sb.String(), "'", "")
+		}
+	}
+	return sb.String()
+}
+
 func main() {
-	builtinCommands := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true, "cd": true}
+	builtinCommands := map[string]bool{
+		"exit": true, "echo": true, "type": true, "pwd": true, "cd": true,
+	}
 	path := strings.Split(os.Getenv("PATH"), ":")
 
 	for {
@@ -29,7 +48,28 @@ func main() {
 				os.Exit(0)
 
 			case "echo":
-				fmt.Printf("%s\n", strings.Join(cmd[1:], " "))
+				str := strings.Join(cmd[1:], " ")
+				var sb strings.Builder
+				isCompleteQuote := false
+				prevQuote := false
+				var tmp []string
+				for _, x := range str {
+					if x == '\'' {
+						isCompleteQuote = prevQuote && !isCompleteQuote
+						prevQuote = !prevQuote
+					}
+					sb.WriteRune(x)
+					if isCompleteQuote {
+						tmp = append(tmp, strings.ReplaceAll(sb.String(), "'", ""))
+						isCompleteQuote = !isCompleteQuote
+						sb.Reset()
+					}
+				}
+				if len(tmp) > 0 {
+					fmt.Println(strings.Join(tmp, ""))
+				} else {
+					fmt.Println(strings.Join(strings.Fields(str), " "))
+				}
 
 			case "type":
 				if builtinCommands[cmd[1]] {
@@ -66,6 +106,36 @@ func main() {
 				} else {
 					os.Chdir(inputPath)
 				}
+
+			case "cat":
+				str := strings.Join(cmd[1:], " ")
+				var sb strings.Builder
+				isCompleteQuote := false
+				prevQuote := false
+				var tmp []string
+				for _, x := range str {
+					if x == '\'' {
+						isCompleteQuote = prevQuote && !isCompleteQuote
+						prevQuote = !prevQuote
+					}
+					sb.WriteRune(x)
+					if isCompleteQuote {
+						tmp = append(tmp, strings.TrimSpace(strings.ReplaceAll(sb.String(), "'", "")))
+						isCompleteQuote = !isCompleteQuote
+						sb.Reset()
+					}
+				}
+				var catCmd []string
+				if len(tmp) > 0 {
+					catCmd = tmp
+				} else {
+					catCmd = append(catCmd, strings.Join(strings.Fields(str), " "))
+				}
+
+				c := exec.Command(cmd[0], catCmd...)
+				c.Stdout = os.Stdout
+				c.Stderr = os.Stderr
+				c.Run()
 
 			default:
 				if len(cmd) > 1 {
