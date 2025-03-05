@@ -13,7 +13,7 @@ import (
 var _ = fmt.Fprint
 
 func main() {
-	builtinCommands := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true}
+	builtinCommands := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true, "cd": true}
 	path := strings.Split(os.Getenv("PATH"), ":")
 
 	for {
@@ -52,6 +52,11 @@ func main() {
 			case "pwd":
 				dir, _ := os.Getwd()
 				fmt.Println(dir)
+
+			case "cd":
+				inputPath := cmd[1]
+				os.Chdir((inputPath))
+				// fmt.Println(cmd[1])
 
 			default:
 				if len(cmd) > 1 {
