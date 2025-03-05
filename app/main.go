@@ -12,23 +12,6 @@ import (
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Fprint
 
-func quoteStrip(str string) string {
-	var sb strings.Builder
-	isCompleteQuote := false
-	prevQuote := false
-	for _, x := range str {
-		if x == '\'' {
-			isCompleteQuote = prevQuote && !isCompleteQuote
-			prevQuote = !prevQuote
-		}
-		sb.WriteRune(x)
-		if isCompleteQuote {
-			return strings.ReplaceAll(sb.String(), "'", "")
-		}
-	}
-	return sb.String()
-}
-
 func main() {
 	builtinCommands := map[string]bool{
 		"exit": true, "echo": true, "type": true, "pwd": true, "cd": true,
