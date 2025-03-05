@@ -55,8 +55,12 @@ func main() {
 
 			case "cd":
 				inputPath := cmd[1]
-				os.Chdir((inputPath))
-				// fmt.Println(cmd[1])
+				_, err := os.Stat(inputPath)
+				if err != nil {
+					fmt.Printf("cd: %s: No such file or directory\n", inputPath)
+				} else {
+					os.Chdir(inputPath)
+				}
 
 			default:
 				if len(cmd) > 1 {
