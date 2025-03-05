@@ -55,9 +55,11 @@ func main() {
 
 			case "cd":
 				inputPath := cmd[1]
-				// inputPathes := strings.Split(inputPath, "/")
-				// firstPath := inputPathes[0]
-
+				if inputPath == "~" {
+					home, _ := os.UserHomeDir()
+					os.Chdir(home)
+					break
+				}
 				_, err := os.Stat(inputPath)
 				if err != nil {
 					fmt.Printf("cd: %s: No such file or directory\n", inputPath)
