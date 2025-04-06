@@ -114,30 +114,6 @@ func main() {
 
 			case "cat":
 				str := strings.Join(cmd[1:], " ")
-				// var sb strings.Builder
-				// isCompleteQuote := false
-				// prevQuote := false
-				// var tmp []string
-				// for _, x := range str {
-				// 	if x == '\'' {
-				// 		isCompleteQuote = prevQuote && !isCompleteQuote
-				// 		prevQuote = !prevQuote
-				// 	}
-				// 	sb.WriteRune(x)
-				// 	if isCompleteQuote {
-				// 		s := strings.ReplaceAll(sb.String(), "'", "")
-				// 		s = strings.ReplaceAll(s, " ", "")
-				// 		tmp = append(tmp, strings.TrimSpace(s))
-				// 		isCompleteQuote = !isCompleteQuote
-				// 		sb.Reset()
-				// 	}
-				// }
-				// var catCmd []string
-				// if len(tmp) > 0 {
-				// 	catCmd = tmp
-				// } else {
-				// 	catCmd = append(catCmd, strings.Join(strings.Fields(str), " "))
-				// }
 				cache := qoutesProcess(str)
 				var catCmd []string
 				for _, x := range cache {
