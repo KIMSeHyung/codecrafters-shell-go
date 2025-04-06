@@ -12,6 +12,47 @@ import (
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Fprint
 
+func qoutesProcess(str string) []string {
+	var sb strings.Builder
+	inSingleQuote := false
+	inDoubleQuote := false
+	previous := rune(' ')
+	var cache []string
+
+	for _, r := range str {
+		switch {
+		case r == '\'' && !inDoubleQuote && !inSingleQuote:
+			inSingleQuote = true
+
+		case r == '"' && !inDoubleQuote && !inSingleQuote:
+			inDoubleQuote = true
+
+		case r == '\'' && inSingleQuote:
+			cache = append(cache, sb.String())
+			sb.Reset()
+			inSingleQuote = false
+
+		case r == '"' && inDoubleQuote:
+			cache = append(cache, sb.String())
+			sb.Reset()
+			inDoubleQuote = false
+
+		case r == ' ' && previous != ' ' && !inSingleQuote && !inDoubleQuote:
+			sb.WriteRune(' ')
+
+		case inSingleQuote || inDoubleQuote || r != ' ':
+			sb.WriteRune(r)
+		}
+
+		previous = r
+	}
+
+	if sb.Len() > 0 {
+		cache = append(cache, sb.String())
+	}
+	return cache
+}
+
 func main() {
 	builtinCommands := map[string]bool{
 		"exit": true, "echo": true, "type": true, "pwd": true, "cd": true,
@@ -32,27 +73,8 @@ func main() {
 
 			case "echo":
 				str := strings.Join(cmd[1:], " ")
-				var sb strings.Builder
-				isCompleteQuote := false
-				prevQuote := false
-				var tmp []string
-				for _, x := range str {
-					if x == '\'' {
-						isCompleteQuote = prevQuote && !isCompleteQuote
-						prevQuote = !prevQuote
-					}
-					sb.WriteRune(x)
-					if isCompleteQuote {
-						tmp = append(tmp, strings.ReplaceAll(sb.String(), "'", ""))
-						isCompleteQuote = !isCompleteQuote
-						sb.Reset()
-					}
-				}
-				if len(tmp) > 0 {
-					fmt.Println(strings.Join(tmp, ""))
-				} else {
-					fmt.Println(strings.Join(strings.Fields(str), " "))
-				}
+				cache := qoutesProcess(str)
+				fmt.Println(strings.Join(cache, ""))
 
 			case "type":
 				if builtinCommands[cmd[1]] {
@@ -92,27 +114,34 @@ func main() {
 
 			case "cat":
 				str := strings.Join(cmd[1:], " ")
-				var sb strings.Builder
-				isCompleteQuote := false
-				prevQuote := false
-				var tmp []string
-				for _, x := range str {
-					if x == '\'' {
-						isCompleteQuote = prevQuote && !isCompleteQuote
-						prevQuote = !prevQuote
-					}
-					sb.WriteRune(x)
-					if isCompleteQuote {
-						tmp = append(tmp, strings.TrimSpace(strings.ReplaceAll(sb.String(), "'", "")))
-						isCompleteQuote = !isCompleteQuote
-						sb.Reset()
-					}
-				}
+				// var sb strings.Builder
+				// isCompleteQuote := false
+				// prevQuote := false
+				// var tmp []string
+				// for _, x := range str {
+				// 	if x == '\'' {
+				// 		isCompleteQuote = prevQuote && !isCompleteQuote
+				// 		prevQuote = !prevQuote
+				// 	}
+				// 	sb.WriteRune(x)
+				// 	if isCompleteQuote {
+				// 		s := strings.ReplaceAll(sb.String(), "'", "")
+				// 		s = strings.ReplaceAll(s, " ", "")
+				// 		tmp = append(tmp, strings.TrimSpace(s))
+				// 		isCompleteQuote = !isCompleteQuote
+				// 		sb.Reset()
+				// 	}
+				// }
+				// var catCmd []string
+				// if len(tmp) > 0 {
+				// 	catCmd = tmp
+				// } else {
+				// 	catCmd = append(catCmd, strings.Join(strings.Fields(str), " "))
+				// }
+				cache := qoutesProcess(str)
 				var catCmd []string
-				if len(tmp) > 0 {
-					catCmd = tmp
-				} else {
-					catCmd = append(catCmd, strings.Join(strings.Fields(str), " "))
+				for _, x := range cache {
+					catCmd = append(catCmd, strings.TrimSpace(x))
 				}
 
 				c := exec.Command(cmd[0], catCmd...)
